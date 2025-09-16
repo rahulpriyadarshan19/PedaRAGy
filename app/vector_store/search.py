@@ -35,7 +35,7 @@ class SemanticSearch:
             if not self.pinecone_client.create_index(index_name, dimension=384):
                 raise RuntimeError(f"Failed to create or connect to index '{index_name}'")
     
-    def add_documents(self, documents: List[Dict[str, Any]], 
+    def add_documents(self, documents: List[Dict[str, Any]], embeddings: List[List[float]],
                      namespace: str = "default") -> bool:
         """
         Add documents to the vector database.
@@ -48,12 +48,8 @@ class SemanticSearch:
             bool: True if documents were added successfully
         """
         try:
-            # Extract texts and generate embeddings
-            texts = [doc['text'] for doc in documents]
-            embeddings = self.embedding_model.embed_texts(texts)
-            
             # Upsert documents with embeddings
-            success = self.pinecone_client.upsert_documents(documents, embeddings, namespace)
+            success = self.pinecone_client.upsert_documents(documents, embeddings, namespace=namespace)
             
             if success:
                 logger.info(f"Added {len(documents)} documents to namespace '{namespace}'")

@@ -1,7 +1,5 @@
 # Chunk text into smaller chunks 
 # Chunk by chapter, section, paragraph, sentence, and word
-
-
 class Chunker:
     def chunk_by_chapter(self, text, delimiter="Chapter"):
         chapters = text.split(delimiter)

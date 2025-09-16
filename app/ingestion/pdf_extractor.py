@@ -9,9 +9,6 @@ from pathlib import Path
 
 import pdfplumber
 from pdfplumber.pdf import PDF
-import PyPDF2
-from PIL import Image
-import fitz  # PyMuPDF
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -57,10 +54,6 @@ class PDFExtractor:
             # Extract text based on method
             if self.extraction_method == "pdfplumber":
                 text, page_count = self._extract_with_pdfplumber(pdf_path)
-            elif self.extraction_method == "pypdf2":
-                text, page_count = self._extract_with_pypdf2(pdf_path)
-            elif self.extraction_method == "pymupdf":
-                text, page_count = self._extract_with_pymupdf(pdf_path)
             
             result = {
                 "text": text,
@@ -86,66 +79,6 @@ class PDFExtractor:
         except Exception as e:
             logger.error(f"Error extracting text from {pdf_path}: {e}")
             raise
-    
-    def _extract_with_pdfplumber(self, pdf_path: str) -> Tuple[str, int]:
-        """Extract text using pdfplumber library."""
-        text = ""
-        page_count = 0
-        
-        with pdfplumber.open(pdf_path) as pdf:
-            page_count = len(pdf.pages)
-            
-            for page_num, page in enumerate(pdf.pages, 1):
-                try:
-                    page_text = page.extract_text()
-                    if page_text:
-                        text += f"\n--- Page {page_num} ---\n{page_text}\n"
-                except Exception as e:
-                    logger.warning(f"Error extracting page {page_num}: {e}")
-                    continue
-        
-        return text.strip(), page_count
-    
-    def _extract_with_pypdf2(self, pdf_path: str) -> Tuple[str, int]:
-        """Extract text using PyPDF2 library."""
-        text = ""
-        page_count = 0
-        
-        with open(pdf_path, 'rb') as file:
-            pdf_reader = PyPDF2.PdfReader(file)
-            page_count = len(pdf_reader.pages)
-            
-            for page_num, page in enumerate(pdf_reader.pages, 1):
-                try:
-                    page_text = page.extract_text()
-                    if page_text:
-                        text += f"\n--- Page {page_num} ---\n{page_text}\n"
-                except Exception as e:
-                    logger.warning(f"Error extracting page {page_num}: {e}")
-                    continue
-        
-        return text.strip(), page_count
-    
-    def _extract_with_pymupdf(self, pdf_path: str) -> Tuple[str, int]:
-        """Extract text using PyMuPDF (fitz) library."""
-        text = ""
-        page_count = 0
-        
-        doc = fitz.open(pdf_path)
-        page_count = doc.page_count
-        
-        for page_num in range(page_count):
-            try:
-                page = doc[page_num]
-                page_text = page.get_text()
-                if page_text:
-                    text += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
-            except Exception as e:
-                logger.warning(f"Error extracting page {page_num + 1}: {e}")
-                continue
-        
-        doc.close()
-        return text.strip(), page_count
     
     def _extract_pdf_metadata(self, pdf_path: str) -> Dict[str, Any]:
         """Extract PDF metadata."""
