@@ -91,3 +91,9 @@ def add_file(request: FilePathRequest):
     # Add text to vector store
     semantic_search.add_documents(documents, embeddings, namespace="default")
     return {"message": "Processed file, generated embeddings and added to vector store"}
+
+@app.post("/search/")
+def search(query: str):
+    """Search the vector store for similar documents.
+    """
+    return semantic_search.search(query)
