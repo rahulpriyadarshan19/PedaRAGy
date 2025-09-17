@@ -7,6 +7,11 @@ from app.vector_store.search import SemanticSearch
 from app.preprocessing.chunker import Chunker
 from app.vector_store.pinecone_client import PineconeClient
 from app.ingestion.pdf_extractor import PDFExtractor
+from app.llm.CallOllama.CallOllama import return_response
+import sys
+import os
+
+
 
 load_dotenv()
 pinecone_api_key = os.getenv("PINECONE_API_KEY")
@@ -29,12 +34,21 @@ def root():
 
 @app.post("/ask/")
 def ask_prompt(prompt: str):
-    # 1. Embed prompt.
-    prompt_embedding = embedding_model.embed_text(prompt)
-    # 2. Search vector store for similar prompts.
-    similar_prompts = semantic_search.search(prompt_embedding)
-    # 3. Return most similar prompt.
-    return similar_prompts[0]
+    # 1. Search vector store for relevant chunks (same as search endpoint)
+    relevant_chunks = semantic_search.search(prompt)
+    # 2. Get context from relevant chunks
+    context = "\n\n".join([doc.get('text', '') for doc in relevant_chunks])
+    
+    # # 3. Limit context to 1500 tokens (approximately 6000 characters)
+    # max_context_chars = 6000  # 1500 tokens * 4 chars/token
+    # if len(context) > max_context_chars:
+    #     context = context[:max_context_chars] + "..."
+    
+    # 4. Send query to LLM with context
+    llm_response = return_response(f"Context: {context}\n\nQuestion: {prompt}")
+    # 5. Return LLM response
+    return {"answer": llm_response}
+    
 
 
 @app.post("/add_data/")

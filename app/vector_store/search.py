@@ -60,7 +60,7 @@ class SemanticSearch:
             logger.error(f"Error adding documents: {e}")
             return False
     
-    def search(self, query: str, top_k: int = 5, namespace: str = "default",
+    def search(self, query: str, top_k: int = 3, namespace: str = "default",
                filter_dict: Optional[Dict] = None, min_score: float = 0.0) -> List[Dict[str, Any]]:
         """
         Perform semantic search for documents similar to the query.
