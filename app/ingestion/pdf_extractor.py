@@ -103,6 +103,35 @@ class PDFExtractor:
         
         return metadata
     
+    def _extract_with_pdfplumber(self, pdf_path: str) -> Tuple[str, int]:
+        """
+        Extract text from PDF using pdfplumber.
+        
+        Args:
+            pdf_path: Path to the PDF file
+            
+        Returns:
+            Tuple of (extracted_text, page_count)
+        """
+        text = ""
+        page_count = 0
+        
+        try:
+            with pdfplumber.open(pdf_path) as pdf:
+                page_count = len(pdf.pages)
+                
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
+                
+                logger.info(f"Extracted text from {page_count} pages using pdfplumber")
+                return text.strip(), page_count
+                
+        except Exception as e:
+            logger.error(f"Error extracting text with pdfplumber: {e}")
+            raise
+    
     def _calculate_file_hash(self, file_path: str) -> str:
         """Calculate SHA-256 hash of the file."""
         hash_sha256 = hashlib.sha256()

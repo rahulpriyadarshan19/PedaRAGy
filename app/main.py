@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from pydantic import BaseModel
 from app.embeddings.embedding_model import EmbeddingModel
 from app.vector_store.search import SemanticSearch
 from app.preprocessing.chunker import Chunker
@@ -18,6 +19,10 @@ pdf_extractor = PDFExtractor()
 app = FastAPI()
 
 
+class FilePathRequest(BaseModel):
+    file_path: str
+
+
 @app.get("/")
 def root():
     return {"message": "Welcome to PedaRAGy API", "endpoints": ["/add_file/", "/ask/", "/docs"]}
@@ -33,14 +38,16 @@ def ask_prompt(prompt: str):
 
 
 @app.post("/add_data/")
-def add_file(file_path: str):
+def add_file(request: FilePathRequest):
     """Add a file to the vector store.
 
     Parameters
     ----------
-    file_path : str
-        The path to the file to add to the vector store.
+    request : FilePathRequest
+        The request containing the file path to add to the vector store.
     """
+    
+    file_path = request.file_path
     
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
@@ -64,19 +71,8 @@ def add_file(file_path: str):
             "metadata": {
                 "chunk_index": i,
                 "chunk_method": "chapter",
-            
                 # File-level metadata
-                "source": extracted_data["file_name"],
-                "file_size": extracted_data["file_size"],
-                "page_count": extracted_data["page_count"],
-                "extraction_timestamp": extracted_data["extraction_timestamp"],
-                
-                # PDF metadata
-                "title": pdf_metadata.get("title", ""),
-                "author": pdf_metadata.get("author", ""),
-                "subject": pdf_metadata.get("subject", ""),
-                "creation_date": pdf_metadata.get("creation_date", ""),
-                "keywords": pdf_metadata.get("keywords", "")
+                "source": extracted_data["file_name"]
             }
         })
     
