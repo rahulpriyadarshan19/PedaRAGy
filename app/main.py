@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
 from pydantic import BaseModel
 from app.embeddings.embedding_model import EmbeddingModel
 from app.vector_store.search import SemanticSearch
@@ -10,9 +10,6 @@ from app.ingestion.pdf_extractor import PDFExtractor
 import sys
 import os
 from app.llm.huggingface_client import return_response
-from huggingface_client import return_response
-
-
 
 load_dotenv()
 pinecone_api_key = os.getenv("PINECONE_API_KEY")
@@ -28,13 +25,20 @@ app = FastAPI()
 class FilePathRequest(BaseModel):
     file_path: str
 
+class AskRequest(BaseModel):
+    prompt: str
+    model: str = "codegemma:7b"
+
 
 @app.get("/")
 def root():
     return {"message": "Welcome to PedaRAGy API", "endpoints": ["/add_file/", "/ask/", "/docs"]}
 
 @app.post("/ask/")
-def ask_prompt(prompt: str):
+def ask_prompt(request: AskRequest):
+    prompt = request.prompt
+    model = request.model
+    
     # 1. Search vector store for relevant chunks (same as search endpoint)
     relevant_chunks = semantic_search.search(prompt)
     # 2. Get context from relevant chunks
@@ -46,7 +50,7 @@ def ask_prompt(prompt: str):
     #     context = context[:max_context_chars] + "..."
     
     # 4. Send query to LLM with context
-    llm_response = return_response(f"Context: {context}\n\nQuestion: {prompt}")
+    llm_response = return_response(f"Context: {context}\n\nQuestion: {prompt}", model=model)
     # 5. Return LLM response
     return {"answer": llm_response}
     
