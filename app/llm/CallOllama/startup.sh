@@ -1,1 +1,0 @@
-/usr/bin/python3 /home/administrator/.local/bin/gunicorn --chdir /home/administrator/wwwroot/ollamaflask --timeout 600 --workers 41 --bind 0.0.0.0:5000 app:app

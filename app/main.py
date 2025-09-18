@@ -7,9 +7,10 @@ from app.vector_store.search import SemanticSearch
 from app.preprocessing.chunker import Chunker
 from app.vector_store.pinecone_client import PineconeClient
 from app.ingestion.pdf_extractor import PDFExtractor
-from app.llm.CallOllama.CallOllama import return_response
 import sys
 import os
+from app.llm.huggingface_client import return_response
+from huggingface_client import return_response
 
 
 
