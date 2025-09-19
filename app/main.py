@@ -9,7 +9,7 @@ from app.vector_store.pinecone_client import PineconeClient
 from app.ingestion.pdf_extractor import PDFExtractor
 import sys
 import os
-from app.llm.huggingface_client import return_response
+from app.llm.ollama_client import return_response
 
 load_dotenv()
 pinecone_api_key = os.getenv("PINECONE_API_KEY")
