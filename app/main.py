@@ -10,6 +10,7 @@ from app.ingestion.pdf_extractor import PDFExtractor
 import sys
 import os
 from app.llm.ollama_client import return_response
+from app.llm.prompts import EXPLAIN_PROMPT, QUIZ_PROMPT, HINT_PROMPT, generate_prompt
 
 load_dotenv()
 pinecone_api_key = os.getenv("PINECONE_API_KEY")
@@ -28,6 +29,7 @@ class FilePathRequest(BaseModel):
 class AskRequest(BaseModel):
     prompt: str
     model: str = "codegemma:7b"
+    mode: str = "explain"  # explain, quiz, hint
 
 
 @app.get("/")
@@ -38,6 +40,7 @@ def root():
 def ask_prompt(request: AskRequest):
     prompt = request.prompt
     model = request.model
+    mode = request.mode
     
     # 1. Search vector store for relevant chunks (same as search endpoint)
     relevant_chunks = semantic_search.search(prompt)
@@ -49,10 +52,21 @@ def ask_prompt(request: AskRequest):
     # if len(context) > max_context_chars:
     #     context = context[:max_context_chars] + "..."
     
-    # 4. Send query to LLM with context
-    llm_response = return_response(f"Context: {context}\n\nQuestion: {prompt}", model=model)
-    # 5. Return LLM response
-    return {"answer": llm_response}
+    # 4. Select prompt template based on mode
+    if mode == "explain":
+        formatted_prompt = generate_prompt(EXPLAIN_PROMPT, context, prompt)
+    elif mode == "quiz":
+        formatted_prompt = generate_prompt(QUIZ_PROMPT, context, prompt)
+    elif mode == "hint":
+        formatted_prompt = generate_prompt(HINT_PROMPT, context, prompt)
+    else:
+        # Default to simple context + question format
+        formatted_prompt = f"Context: {context}\n\nQuestion: {prompt}"
+    
+    # 5. Send query to LLM with formatted prompt
+    llm_response = return_response(formatted_prompt, model=model)
+    # 6. Return LLM response
+    return {"answer": llm_response, "mode": mode}
     
 
 
